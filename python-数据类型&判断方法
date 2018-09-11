@@ -1,0 +1,62 @@
+##数据类型判断方法
+1.isinstance(变量名，类型)
+  a = 123
+  b = [1,2,3]
+  c = (1,2,3)
+  d = {a:"a"}
+  
+  isinstance(a,int) //True
+  isinstance(b,list) //True
+  isinstance(c,tuple) //True
+  isinstance(d,dict) //True
+  
+  
+  2.type(变量) == type(对比数据类型)
+    type(a) == type(1) //True
+    type(b) == type([]) //True
+    type(c) == type(()) //True
+    type(d) == type({}) //True
+ 注(区别)：
+  type()不会认为子类是一种父类类型。
+  isinstance()会认为子类是一种父类类型。
+  
+  #区别示例：
+  class A:
+    pass
+
+  class B(A):
+      pass
+
+  isinstance(A(), A)  # returns True
+  type(A()) == A      # returns True
+  isinstance(B(), A)    # returns True
+  type(B()) == A        # returns False
+  
+  ####################################################
+    
+    
+ ##数据类型
+ pPython3 中有六个标准的数据类型：
+  Number（数字）123
+  String（字符串）// "morin"
+  List（列表）//[1,2,3]
+  Tuple（元组）//(1,2,3)
+  Set（集合）//{"one","two","three"}
+  Dictionary（字典）//{a:"one",b:"two",c:"three"}
+
+Python3 的六个标准数据类型中：
+不可变数据（3 个）：Number（数字）、String（字符串）、Tuple（元组）；
+可变数据（3 个）：List（列表）、Dictionary（字典）、Set（集合）
+
+#数据类型转换：
+  s = "this is morin"
+  t = ("a",123)
+  n = 123
+  ss = "123"
+  数组（list）：list(s)
+  元组(tuple)：tuple(s)
+  集合（set）:set(s)
+  字符串（string）：str(n)
+  数字（int）:int(ss)
+
+#参考：http://www.runoob.com/python3/python3-data-type.html
