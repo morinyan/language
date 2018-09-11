@@ -1,0 +1,84 @@
+##函数
+1.可变参数：
+  def morin(*args,name="morin"):
+    print(args)
+    print(name)
+    
+    
+   morin(1,2,3,name="rare")
+   
+   
+ 2.关键字参数：
+  def morin(a=1,b=2):
+    print(a+b)
+    
+    
+  morin("rare","morin")
+  
+  
+ 3.默认参数：
+  def morin(a=1,b):
+    print(a+b)
+    
+   morin(10,2)
+   morin(1,b=1)
+   morin(a=1,b=1)
+
+##字符串
+1.str.capitalize()　--> String　　　返回字符串，其首字母大写，其余部分小写
+2.str.casefold()　--> String　　　字符串转换成小写，用于不区分大小写的字符串比较
+3.str.center(width[, fillchar])　-->String　　　指定长度(此处是长度并不是索引值)填充字符
+4.str.count(sub[, start[, end]])　--> int 　　　　查找某字符串(sub)出现的次数　，也可以查找在某个位置范围 [2,6] 内出现子字符串的次数
+5. str.encode(encoding="utf-8", errors="strict") --> Object　　　　以指定的编码格式解码字符串。默认编码为字符串编码（适合python2中处理中文）
+6. str.endswith(suffix[, start[, end]])  --> Bool(True or False)　　　　用于判断字符串是否以指定后缀结尾，如果以指定后缀结尾返回True，否则返回False。
+
+可选参数"start"与"end"为检索字符串的开始与结束位置
+7.str.expandtabs(tabsize=8) --> String　　　　将字符串中的tab符号('\t')转换为空格，默认的空格数是8；tabsize -- 指定转换字符串中的 tab 符号('\t')转为空格的字符数。
+8.str.find(sub[, start[, end]]) --> int　　　检测字符串中是否包含子字符串，如果指定 beg（开始）和 end（结束）范围，则检查是否包含在指定范围内，如果包含子字符串，则返回开始的索引值(下标，从0开始)，否则返回-1。
+ str.rfind(sub[, start[, end]]) --> int　       返回字符串最后一次出现的位置，如果没有匹配项则返回-1。
+9. str.format(*args, **kwargs) --> String 　　　　格式换字符串输出（方法与%相似，但可以指定顺序） 仔细阅读下面的例子
+10.str.format_map(mapping)  --> String 　　　　执行字符串格式化操作，替换字段使用{}分隔，同str.format(**mapping), 除了直接使用mapping，而不复制到一个dict
+11.str.index(sub[, start[, end]]) --> int 　　　　检测字符串string中是否包含子字符串 sub，如果存在，则返回sub在string中的索引值(下标)，如果指定began（开始）和 end（结束）范围，则检查是否包含在指定范围内，该方法与 python find()方法一样，只不过如果str不在 string中会报一个异常(ValueError: substring not found)。
+##字符串条件判断
+12.str.isalnum() --> Bool (True or False)　　　　判断字符串String是否由字符串或数字组成，并且至少有一个字符（不为空）简而言之：只要 c.isalpha(), c.isdecimal(), c.isdigit(), c.isnumeric() 中任意一个为真，则 c.isalnum() 为真。
+13.str.isalnum() --> Bool (True or False)　　　　判断字符串String是否由字符串或数字组成，并且至少有一个字符（不为空）简而言之：只要 c.isalpha(), c.isdecimal(), c.isdigit(), c.isnumeric() 中任意一个为真，则 c.isalnum() 为真。
+14.str.isalpha() -->Bool (True or False) 　　　　判断字符串String是否只由字母组成，并且至少有一个字符（不为空）
+15.str.isdecimal()小数; str.isdigit()数字; str.isnumeric()数值 -->Bool (True or False) 　　　　判断字符串String是否只由小数/数字/数值组成，并且至少有一个字符（不为空）
+16.str.isidentifier() -->Bool (True or False)　　　　判断字符串中是否是有效标识符
+17.str.islower() -->Bool (True or False)　　　　判断字符串中是否是有效标识符
+18.str.isprintable() -->Bool (True or False)　　　　判断字符串的所有字符都是可打印字符或字符串为空。Unicode 字符集中 “Other” “Separator” 类别的字符为不可打印的字符（但不包括 ASCII 的空格（0x20））。
+19.str.isspace()  -->Bool (True or False)　　　　检测字符串是否只由空格组成，并且至少有一个字符（判断字符串中是否至少有一个字符，并且所有字符都是空白字符。）
+20.str.istitle() -->Bool (True or False)　　　　 判断字符串中的字符是否是首字母大写，且其他字母为小写,其会忽视非字母字符
+21.str.isupper()  -->Bool (True or False)　　　　检测字符串中所有的字母是否都为大写
+##字符串的联合与分割
+22.str.join(iterable)       --> String 　　　　用指定的字符串，连接元素为字符串的可迭代对象
+23.str.ljust(width[, fillchar]);  str.rjust(width[, fillchar])
+
+返回指定长度的字符串，字符串内容居左（右）如果长度小于字符串长度，则返回原始字符串，默认填充为 ASCII 空格，可指定填充的字符串。
+24.str.lower() -->String 　　　　字符串转换成小写    其仅对 ASCII 编码的字母有效。
+25.str.lstrip([chars]);    str.rstrip([chars]);    str.strip([chars])   -->  string or unicode
+
+去掉(删除)字符串后面 / 前面/ 两边 的空格(默认是空格)，或参数中的字符
+26.static str.maketrans(x[, y[, z]])    str.translate(table)
+
+maktrans 是一个静态方法，用于生成一个对照表，以供 translate 使用。
+如果 maktrans 仅一个参数，则该参数必须是一个字典，字典的 key 要么是一个 Unicode 编码（一个整数），要么是一个长度为 1 的字符串，字典的 value 则可以是任意字符串、None或者 Unicode 编码。
+27.str.partition(sep) --> (head, sep, tail) 　　　　根据指定的分隔符将字符串进行分割（返回一个3元的元组，第一个为分隔符左边的子串，第二个为分隔符本身，第三个为分隔符右边的子串）
+注：str.partition(sep) 是从前往后查找 (从左往右)
+　　str.rpartition(sep)  是从后面开始查找 (从右往左)
+ 
+28.与 find() rfind() 类似，不同的是如果找不到，就会引发 ValueError。
+str.index(sub[, start[, end]]); --> String　　       把字符串中的 old（旧字符串）替换成 new(新字符串)，如果指定第三个参数max，则替换不超过 max 次。str.rindex(sub[, start[, end]]) --> String　　　　返回子字符串 str 在字符串中最后出现的位置，如果没有匹配的字符串会报异常，你可以指定可选参数[beg:end]设置查找的区间。
+29. str.split(sep=None, maxsplit=-1) --> list　　　　通过指定分隔符对字符串进行切片，如果参数num有指定值，则仅分隔 num 个子字符串 
+ str.rsplit(sep=None, maxsplit=-1)          从后往前
+　　　　　　　　　　　　　　　　　　　　　　　　如果字符串开头/结尾包含空格字符串则以非空格字符串后的第一个空格为分隔符
+30.str.splitlines([keepends])  --> List　　　　字符串以换行符为分隔符拆分，去掉行界符；如果keepends为True，保留行界符，能被识别的行界符参照官方文档
+31.str.startswith(prefix[, start[, end]]) --> Bool (true or false)　　　　用于检查字符串是否是以指定子字符串开头，如果是则返回 True，否则返回 False。如果参数 beg 和 end指定值，则在指定范围内检查。
+32.str.swapcase() -- > String   用于对字符串的大小写字母进行反转(小写转大写，大写转小写)
+33.str.strip([chars]) -->String  　　　　返回"标题化"的字符串,就是说所有单词都是以大写开始，其余字母均为小写。
+34.str.upper() -->String　　　　将字符串所有字母变为大写，会自动忽略不可转成大写的字符。
+35.str.zfill(width) --> String 　　　　用 '0' 填充字符串，并返回指定宽度的字符串。
+注：正常一般是从字符串的左边开始填充，如指定长度小于字符串长度则返回原字符串
+
+
+
