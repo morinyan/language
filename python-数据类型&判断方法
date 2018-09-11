@@ -1,3 +1,4 @@
+#参考：https://blog.csdn.net/charles_neil/article/details/71037311
 ##数据类型判断方法
 1.isinstance(变量名，类型)
   a = 123
