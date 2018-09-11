@@ -1,0 +1,26 @@
+1.if语句：
+  if a > b:
+    print(a)
+  elif a > c:
+    print(a)
+  else:
+    print(a)
+ 
+ 2.while语句：
+  #a
+  while a > b:
+    print(a)
+ 
+ #b
+  count = 0
+  while count < 5:
+     print (count, " 小于 5")
+     count = count + 1
+  else:
+     print (count, " 大于或等于 5")
+     
+3.for语句：
+  for <variable> in <sequence>:
+    <statements>
+  else:
+    <statements>
