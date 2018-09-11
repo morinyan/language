@@ -1,1 +1,11 @@
 #类
+1.基本用法：
+  class Morin():
+    def __init__(self,name):
+      self.name = name
+    def rare(self):
+      print(self.name)
+      
+      
+2.
+ 
