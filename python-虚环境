@@ -1,0 +1,25 @@
+#virtualenvwrapper:
+ 1.安装
+  //pip安装
+  pip install virtualenvwrapper
+  //豆瓣源安装
+  sudo pip install -i https://pypi.douban.com/simple virtualenvwrapper
+  
+ 2.配置virtualenvwrapper:
+  全局搜索virtualenvwrapper.sh文件的位置
+  并把该文件配置到 ~/.zshrc 或  ~/.bashrc文件中
+ 
+ 3.重新载入~/.zshrc 或  ~/.bashrc文件
+ source ~/.zshrc 或者 source ~/.bashrc
+ 
+ 4.创建指定python版本的虚环境
+ mkvirtualenv morin -p $(which python3)
+ 
+ ##常用命令：
+  workon //查看虚环境列表
+  deactivate //退出虚环境
+  workon morin //切换虚环境
+  
+  
+  ##参考文章https://www.jianshu.com/p/9f47a9801329
+  
