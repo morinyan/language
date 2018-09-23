@@ -1,0 +1,27 @@
+str = "2018-10-01 12:13:20"
+
+import time
+#字符串转换成时间对象
+time.strptime(str,"%Y-%m-%d %X")
+#其他用法
+##
+  str = "2016/05/22"
+  time.strptime(str,"%Y/%m/%d")
+  time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+##
+# =>time.struct_time(tm_year=2018,tm_mon=10,tm_mday=1,tm_hour=12,tm_min=13,tm_sec=20,tm_wday=4,tm_yday=142,tm_isdst=-1)
+
+#时间对象转时间戳
+time.mktime(tm_year=2018,tm_mon=10,tm_mday=1,tm_hour=12,tm_min=13,tm_sec=20,tm_wday=4,tm_yday=142,tm_isdst=
+# => 12312312344.0(时间戳)
+
+#时间戳转时间对象
+t = 123123123123.0 #时间戳
+
+# =>time.gmtime(t)
+
+#时间对象转字符串
+
+# => time.strftime("%Y-%m-%d %H:%M:%S",时间对象)
+
+
