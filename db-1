@@ -1,0 +1,219 @@
+# -*- coding: UTF-8 -*-
+from tornado_battery.exception import ClientException
+from tornado_battery.mysql import LOG, with_mysql
+from . import query_all, query_one
+from aiomysql import DictCursor
+from datetime import datetime
+
+import logging
+LOG = logging.getLogger('biz')
+
+
+#查找已审核的帖子
+async def get_audited_list(posts_title,posts_owner,posts_content,community_name,start_time,end_time,is_audit,begin,end):
+    sql = """
+        SELECT 
+            a.id,
+            a.title,
+            a.content,
+            d.file_name,
+            c.nick_name,
+            b.name,
+            a.create_time,
+            a.audit_status 
+        FROM forum a 
+        LEFT JOIN community b ON a.community_id=b.id 
+        LEFT JOIN user c ON a.user_id=c.id 
+        LEFT JOIN upload_file d ON a.id=d.relate_id 
+        {where_sql} 
+        ORDER BY a.create_time DESC LIMIT %s, %s 
+    """
+
+    count_sql = """
+        SELECT 
+            COUNT(1) 
+        FROM forum a 
+        LEFT JOIN community b ON a.community_id=b.id 
+        LEFT JOIN user c ON a.user_id=c.id 
+        LEFT JOIN upload_file d ON a.id=d.relate_id 
+        {where_sql}  
+    """
+
+
+    if is_audit == 0:
+        where_sql = """
+                WHERE a.audit_status=1 OR a.audit_status=2 
+            """
+    elif is_audit == 1:
+        where_sql = """
+                        WHERE a.audit_status=1 
+                    """
+    elif is_audit == 2:
+        where_sql = """
+                        WHERE a.audit_status=2 
+                    """
+
+    part_sqls = []
+
+    if posts_title:
+        part_sqls.append(' AND a.title LIKE "%s" ' % ("%%%%%s%%%%" % posts_title))
+    if posts_owner:
+        part_sqls.append(' AND c.nick_name LIKE "%s" ' % ("%%%%%s%%%%" % posts_owner))
+    if posts_content:
+        part_sqls.append(' AND a.content LIKE "%s" ' % ("%%%%%s%%%%" % posts_content))
+    if community_name:
+        part_sqls.append(' AND b.name LIKE "%s" ' % ("%%%%%s%%%%" % community_name))
+    if start_time:
+        part_sqls.append(' AND a.create_time >= "%s" ' % start_time)
+    if end_time:
+        part_sqls.append(' AND a.create_time <= "%s" ' % end_time)
+
+    where_sql = f'{where_sql}{"".join(part_sqls)}'
+
+    sql = sql.format(where_sql=where_sql)
+    count_sql = count_sql.format(where_sql=where_sql)
+
+    data = await query_all(sql,(begin, end))
+
+    cnt = await query_all(count_sql,())
+
+    for i, _data in enumerate(data):
+        _data['create_time'] = datetime.strftime(_data['create_time'],'%Y-%m-%d %H:%M:%S')
+        _data['index'] = begin + i + 1
+    
+    return dict(data=data,cnt=cnt)
+
+
+#删除已审核帖子
+@with_mysql('master')
+async def delete_audited_item(posts_id, db=None):
+    sql = """
+        DELETE FROM forum WHERE id=%s
+    """
+
+    async with db.cursor(DictCursor) as c:
+        await c.execute('BEGIN')
+        try:
+            await c.execute(sql, (posts_id,))
+            await c.execute('COMMIT')
+        except Exception as e:
+            await c.execute('ROLLBACK')
+            LOG.error(e, exec_info=True)
+            raise ClientException('delete failed')
+
+
+
+
+#查找未审核的帖子
+async def get_unaudited_list(posts_title, posts_owner, posts_content, community_name, start_time, end_time, begin, end):
+    sql = """
+        SELECT 
+            a.id,
+            a.title,
+            a.content,
+            d.file_name,
+            c.nick_name,
+            b.name,
+            a.create_time,
+            a.audit_status 
+        FROM forum a 
+        LEFT JOIN community b ON a.community_id=b.id 
+        LEFT JOIN user c ON a.user_id=c.id 
+        LEFT JOIN upload_file d ON a.id=d.relate_id 
+        {where_sql} 
+        ORDER BY a.create_time DESC LIMIT %s, %s 
+    """
+
+    count_sql = """
+            SELECT 
+                COUNT(1) 
+            FROM forum a 
+            LEFT JOIN community b ON a.community_id=b.id 
+            LEFT JOIN user c ON a.user_id=c.id 
+            LEFT JOIN upload_file d ON a.id=d.relate_id 
+            {where_sql}  
+        """
+
+    where_sql = """
+            WHERE a.audit_status=0
+        """
+
+    part_sqls = []
+
+    if posts_title:
+        part_sqls.append(' AND a.title LIKE "%s" ' % ("%%%%%s%%%%" % posts_title))
+    if posts_owner:
+        part_sqls.append(' AND c.nick_name LIKE "%s" ' % ("%%%%%s%%%%" % posts_owner))
+    if posts_content:
+        part_sqls.append(' AND a.content LIKE "%s" ' % ("%%%%%s%%%%" % posts_content))
+    if community_name:
+        part_sqls.append(' AND b.name LIKE "%s" ' % ("%%%%%s%%%%" % community_name))
+    if start_time:
+        part_sqls.append(' AND a.create_time >= "%s" ' % start_time)
+    if end_time:
+        part_sqls.append(' AND a.create_time <= "%s" ' % end_time)
+
+    where_sql = f'{where_sql}{"".join(part_sqls)}'
+
+    sql = sql.format(where_sql=where_sql)
+    count_sql = count_sql.format(where_sql=where_sql)
+
+    data = await query_all(sql, (begin, end))
+
+    cnt = await query_all(count_sql, ())
+
+    for i, _data in enumerate(data):
+        _data['create_time'] = datetime.strftime(_data['create_time'],'%Y-%m-%d %H:%M:%S')
+        _data['index'] = begin + i + 1
+
+    return dict(data=data, cnt=cnt)
+
+
+
+
+
+
+#通过或者拒绝通过
+@with_mysql('master')
+async def manage_audited_status(posts_id, posts_status, db=None):
+    sql = """
+        update forum set audit_status=%s where id=%s
+    """
+
+    async with db.cursor(DictCursor) as c:
+        await c.execute('BEGIN')
+        try:
+            await c.execute(sql, (posts_status, posts_id))
+            await c.execute('COMMIT')
+        except Exception as e:
+            await c.execute('ROLLBACK')
+            LOG.error(e, exec_info=True)
+            raise ClientException('update failed')
+
+
+#查看帖子详情
+async def get_posts_details(posts_id):
+    sql = """
+        SELECT 
+            a.id,
+            a.title,
+            a.content,
+            d.file_name,
+            b.name,
+            a.create_time,
+            a.audit_status,
+            e.topic_name 
+        FROM forum a 
+        LEFT JOIN community b ON a.community_id=b.id 
+        LEFT JOIN topic_forum_rel c ON a.id=c.forum_id 
+        LEFT JOIN upload_file d ON a.id=d.relate_id 
+        LEFT JOIN topic_info e ON c.topic_id=e.id 
+        WHERE a.id=%s 
+    """
+
+    data = await query_all(sql, (posts_id, ))
+
+    return dict(data=data)
+
+
+
