@@ -1,0 +1,253 @@
+# -*- coding: UTF-8 -*-
+from tornado_battery.exception import ClientException
+from tornado_battery.mysql import LOG, with_mysql
+from . import query_all, query_one
+from aiomysql import DictCursor
+from datetime import datetime
+
+#商品举报列表
+async def get_goods_list(is_done,begin,end):
+    sql = """
+        SELECT 
+            a.id AS inform_id, 
+            a.inform_reason AS inform_reason,  
+            a.create_time AS create_time, 
+            a.is_done AS is_done, 
+            a.process_method AS process_method, 
+            a.update_time AS process_time, 
+            b.nickname AS processor_name, 
+            c.nick_name AS reporter_name, 
+            d.open_id AS reporter_open_id, 
+            a.update_time AS update_time, 
+            q.goods_name, 
+            q.id AS goods_id, 
+            q.ball_num AS goods_price, 
+            q.logistics_method, 
+            q.create_time AS goods_create_time, 
+            w.nick_name AS goods_user_name,  
+            t.open_id AS goods_user_open_id  
+        FROM inform a 
+        LEFT JOIN pangball_admin b ON a.processor_id=b.backyard_id 
+        LEFT JOIN user c ON a.reporter_id=c.id 
+        LEFT JOIN user_token d ON a.reporter_id=d.user_id 
+        LEFT JOIN goods q ON a.relate_id=q.id 
+        LEFT JOIN user w ON q.user_id=w.id 
+        LEFT JOIN user_token t ON q.user_id=t.user_id 
+        {where_sql} 
+        ORDER BY a.create_time DESC 
+        LIMIT %s, %s 
+    """
+
+    count_sql = """
+            SELECT 
+                COUNT(a.id) AS cnt 
+            FROM inform a 
+            {where_sql}
+        """
+
+    where_sql = """
+            WHERE a.relate_type=0 AND a.is_done=%s 
+        """
+
+    args = (is_done, begin, end)
+    count_args = (is_done)
+    # 1卖家包邮 2买家付费 3同城自提 4买家付费+同城自提'
+    logistics_method = {1: '卖家包邮', 2: '买家付费', 3: '同城自提', 4: '买家付费+同城自提'}
+    # 0:不处理,1:已警告,2:已扣球处罚,3:已加入黑名单,4:已停权'
+    process_result = {0: '不处理', 1: '已警告', 2: '已扣球处罚', 3: '已加入黑名单', 4: '已停权'}
+
+    data = await query_all(sql.format(where_sql=where_sql), args)
+    cnt = await query_one(count_sql.format(where_sql=where_sql), count_args)
+
+    for i, _data in enumerate(data):
+        _data['create_time'] = datetime.strftime(_data['create_time'],'%Y-%m-%d %H:%M:%S')
+        _data['update_time'] = datetime.strftime(_data['update_time'],'%Y-%m-%d %H:%M:%S')
+        _data['goods_create_time'] = datetime.strftime(_data['goods_create_time'],'%Y-%m-%d %H:%M:%S')
+        _data['process_time'] = datetime.strftime(_data['process_time'], '%Y-%m-%d %H:%M:%S')
+        _data['logistics_method'] = logistics_method[_data['logistics_method']] if isinstance(
+            _data['logistics_method'], int) else ''
+        _data['index'] = begin + i + 1
+        if (_data['process_method'] == 0 and _data['is_done'] == 0):
+            _data['process_method_detail'] = '暂未处理'
+        else:
+            _data['process_method_detail'] = process_result[_data['process_method']] if isinstance(
+                _data['process_method'], int) else ''
+        if _data['processor_name'] == None:
+            _data['processor_name'] = '暂无'
+    return dict(data=data,cnt=cnt)
+
+
+#订单举报列表
+async def get_order_list(is_done,begin,end):
+    sql = """
+        SELECT 
+            a.id AS inform_id, 
+            a.inform_reason AS inform_reason, 
+            a.create_time AS create_time, 
+            a.is_done AS is_done, 
+            a.process_method AS process_method, 
+            a.update_time AS update_time, 
+            b.nickname AS nickname, 
+            c.nick_name AS reporter_name, 
+            d.open_id AS reporter_open_id, 
+            q.order_no AS order_no, 
+            q.order_status AS order_status, 
+            p.goods_name, 
+            p.ball_num, 
+            q.unit_price AS unit_price, 
+            q.create_time AS order_create_time, 
+            l.open_id AS relate_open_id, 
+            i.nick_name AS relatename, 
+            q.type AS logistics_method, 
+            q.receive_name AS receive_name, 
+            q.receive_phone AS receive_phone, 
+            q.receive_address AS receive_address, 
+            w.logistics_num, 
+            v.company_name 
+        FROM inform a 
+        LEFT JOIN pangball_admin b ON a.processor_id=b.backyard_id 
+        LEFT JOIN user c ON a.reporter_id=c.id 
+        LEFT JOIN user_token d ON a.reporter_id=d.user_id 
+        LEFT JOIN orders q ON a.relate_id=q.id 
+        LEFT JOIN order_logistics_mid w ON q.id=w.order_id 
+        LEFT JOIN logistics_company v ON w.company_id=v.id 
+        LEFT JOIN goods p ON q.goods_id=p.id 
+        LEFT JOIN user_token l ON p.user_id=l.user_id 
+        LEFT JOIN user i ON p.user_id=i.id 
+        {where_sql} 
+        ORDER BY a.create_time DESC 
+        LIMIT %s, %s 
+    """
+
+    count_sql = """
+        SELECT 
+            COUNT(a.id) AS cnt 
+        FROM inform a
+        {where_sql}
+    """
+
+    where_sql = """
+        WHERE a.relate_type=1 AND a.is_done=%s 
+    """
+    # 1卖家包邮 2买家付费 3同城自提
+    method2program = {1: '卖家包邮', 2: '买家付费', 3: '同城自提'}
+    # 0.已取消  1已拍下(禁用) 2待付款 3.待发货 4.待收货 5.已收货 6.待评价（禁用） 7.买家已评价  8.卖家已评价 9.双方已评价
+    orderStatus = {0: '已取消', 1: '已拍下', 2: '待付款', 3: '待发货',
+                   4: '待发货', 5: '已收货', 6: '待评价（禁用）',
+                   7: '买家已评价', 8: '卖家已评价', 9: '双方已评价'}
+    # 0:不处理,1:已警告,2:已扣球处罚,3:已加入黑名单,4:已停权',
+    process_result = {0: '不处理', 1: '已警告', 2: '已扣球处罚', 3: '已加入黑名单', 4:'已停权'}
+
+    args = (is_done, begin, end)
+    count_args = (is_done)
+
+    data = await query_all(sql.format(where_sql=where_sql), args)
+    cnt = await query_one(count_sql.format(where_sql=where_sql), count_args)
+
+    for i, _data in enumerate(data):
+        print(_data['process_method'])
+        print('dddddd', _data['nickname'])
+        _data['create_time'] = datetime.strftime(_data['create_time'],'%Y-%m-%d %H:%M:%S')
+        _data['update_time'] = datetime.strftime(_data['update_time'],'%Y-%m-%d %H:%M:%S')
+        print(_data['order_create_time'])
+        _data['logistics_method'] = method2program[
+            _data['logistics_method']] if isinstance(_data['logistics_method'],
+                                                     int) else ''
+        _data['order_status'] = orderStatus[_data['order_status']] if isinstance(
+            _data['order_status'], int) else ''
+        _data['order_create_time'] = datetime.strftime(_data['order_create_time'],'%Y-%m-%d %H:%M:%S')
+        _data['name_phone_address'] = _data['receive_name'] + ':  ' + _data['receive_phone'] \
+                                      + '    '+ _data['receive_address']
+        if (_data['process_method'] == 0 and _data['nickname'] == None):
+            _data['process_method_detail'] = '暂未处理'
+        else:
+            _data['process_method_detail'] = process_result[_data['process_method']] if isinstance(
+            _data['process_method'], int) else ''
+        if _data['nickname'] == None:
+            _data['nickname'] = '暂无'
+        _data['index'] = begin + i + 1
+
+    return dict(data=data, cnt=cnt)
+
+
+#用户举报列表
+async def get_user_list(is_done,begin,end):
+    sql = """
+        SELECT 
+            a.id AS inform_id, 
+            a.inform_reason AS inform_reason,
+            a.create_time AS create_time,
+            a.is_done AS is_done,
+            a.process_method AS process_method,
+            a.update_time AS update_time,
+            b.nick_name AS relate_name,
+            c.nick_name AS reporter_name,
+            d.nickname AS pangqiu_name,
+            e.open_id AS relate_open_id,
+            f.open_id AS reporter_open_id
+        FROM 
+            inform a 
+                LEFT JOIN 
+            user b ON a.relate_id = b.id 
+                LEFT JOIN 
+            user c ON a.reporter_id = c.id 
+                LEFT JOIN 
+            pangball_admin d ON a.processor_id = d.backyard_id 
+                LEFT JOIN 
+            user_token e ON a.relate_id = e.user_id 
+                LEFT JOIN 
+            user_token f ON a.reporter_id = f.user_id 
+        {where_sql} 
+        ORDER BY a.create_time DESC 
+        LIMIT %s , %s;
+    """
+
+    count_sql = """
+            SELECT 
+                COUNT(a.id) AS cnt 
+            FROM inform a
+            {where_sql}
+        """
+
+    where_sql = """
+            WHERE a.relate_type=2 AND a.is_done=%s 
+        """
+    # 0:不处理,1:已警告,2:已扣球处罚,3:已加入黑名单,4:已停权',
+    process_result = {0: '不处理', 1: '已警告', 2: '已扣球处罚', 3: '已加入黑名单', 4:'已停权'}
+
+    args = (is_done, begin, end)
+    count_args = (is_done)
+
+    data = await query_all(sql.format(where_sql=where_sql), args)
+    cnt = await query_one(count_sql.format(where_sql=where_sql), count_args)
+
+    for i, _data in enumerate(data):
+        _data['create_time'] = datetime.strftime(_data['create_time'],'%Y-%m-%d %H:%M:%S')
+        _data['update_time'] = datetime.strftime(_data['update_time'],'%Y-%m-%d %H:%M:%S')
+        _data['index'] = begin + i + 1
+        if (_data['process_method'] == 0 and _data['pangqiu_name'] == None):
+            _data['process_method_detail'] = '暂未处理'
+        else:
+            _data['process_method_detail'] = process_result[_data['process_method']] if isinstance(
+            _data['process_method'], int) else ''
+        if _data['pangqiu_name'] == None:
+            _data['pangqiu_name'] = '暂无'
+
+    return dict(data=data, cnt=cnt)
+
+
+#处理举报
+@with_mysql('master')
+async def process_inform(id, processor_id, process_method, db=None):
+    sql = 'UPDATE inform SET process_method = %s, is_done=1, processor_id = %s WHERE id = %s'
+    args = (process_method, processor_id, id)
+
+    async with db.cursor(DictCursor) as c:
+        await c.execute('BEGIN')
+        try:
+            await c.execute(sql,args)
+            await c.execute('COMMIT')
+        except Exception as e:
+            await c.execute('ROLLBACK')
+            LOG.error(e,exec_info=True)
+            raise ClientException('update inform failed')
