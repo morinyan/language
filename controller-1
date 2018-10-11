@@ -1,0 +1,124 @@
+from ..route import route
+from kitchen.db import posts
+from kitchen.service.mixins import AuthorizedMixin
+from tornado_battery.controller import JSONController
+from tornado_battery.exception import ClientException
+
+
+#帖子管理之已审核帖子列表
+@route("/api/v1/posts/audited")
+class PostsAudited(JSONController):
+    async def get(self):
+        posts_title = self.get_argument("postsTitle","")
+        posts_owner = self.get_argument("postsOwner","")
+        posts_content = self.get_argument("postsContet","")
+        community_name = self.get_argument("communityName","")
+        start_time = self.get_argument("startTime",None)
+        end_time = self.get_argument("endTime",None)
+        is_audit = self.get_argument("isAudit",0)
+        page_size = int(self.get_argument("pageSize",None))
+        page_no = int(self.get_argument("pageNo",None))
+
+        if not all([page_size, page_no]):
+            raise ClientException('页码或者条数不能为空!')
+
+        begin, end = (page_no-1)*page_size, page_size
+
+        data = await posts.get_audited_list(
+                    posts_title=posts_title,
+                    posts_owner=posts_owner,
+                    posts_content=posts_content,
+                    community_name=community_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                    is_audit=int(is_audit),
+                    begin=begin,
+                    end=end
+                )
+
+        self.reply(**data)
+
+
+#帖子管理之未审核帖子列表
+@route("/api/v1/posts/unaudited")
+class PostsUnaudited(JSONController):
+    async def get(self):
+        posts_title = self.get_argument("postsTitle","")
+        posts_owner = self.get_argument("postsOwner","")
+        posts_content = self.get_argument("postsContet","")
+        community_name = self.get_argument("communityName","")
+        start_time = self.get_argument("startTime",None)
+        end_time = self.get_argument("endTime",None)
+        page_size = int(self.get_argument("pageSize",None))
+        page_no = int(self.get_argument("pageNo",None))
+
+        if not all([page_size, page_no]):
+            raise ClientException('页码或者条数不能为空!')
+
+        begin, end = (page_no-1)*page_size, page_size
+
+        data = await posts.get_unaudited_list(
+                    posts_title=posts_title,
+                    posts_owner=posts_owner,
+                    posts_content=posts_content,
+                    community_name=community_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                    begin=begin,
+                    end=end
+                )
+
+        self.reply(**data)
+
+
+#帖子管理之删除帖子
+@route("/api/v1/posts/delete")
+class PostsDelete(JSONController):
+    async def post(self):
+        posts_id = self.get_data("postsId",None)
+
+        if not posts_id:
+            raise ClientException('帖子ID不能为空!')
+
+        await posts.delete_audited_item(posts_id=posts_id)
+
+        self.reply(dict(msg="ok"))
+
+
+
+#帖子管理之审核通过/拒绝
+@route("/api/v1/posts/manage")
+class PostsManage(JSONController):
+    async def post(self):
+        posts_id = self.get_data("postsId",None)
+        posts_status = self.get_data("postsStatus",None)
+
+        if not all([posts_id,posts_status]):
+            raise ClientException('参数不能为空!')
+
+        await posts.manage_audited_status(
+                    posts_id=posts_id,
+                    posts_status=posts_status
+                )
+        
+        self.reply(dict(msg="ok"))
+
+
+#帖子管理之查看帖子详情
+@route("/api/v1/posts/details")
+class PostsDetails(JSONController):
+    async def post(self):
+        posts_id = self.get_data("postsId",None)
+
+        if not posts_id:
+            raise ClientException('帖子ID不能为空!')
+
+        data = await posts.get_posts_details(posts_id=posts_id)
+
+        self.reply(**data)
+
+
+
+
+
+
