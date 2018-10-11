@@ -1,0 +1,52 @@
+# -*- coding: UTF-8 -*-
+from kitchen.app.api.route import route
+from kitchen.db import user_inform
+from tornado_battery.controller import JSONController
+from tornado_battery.exception import ClientException
+
+
+#举报列表搜索接口(0:商品,1:订单,2:用户)
+@route('/api/v1/informList')
+class InformList(JSONController):
+    async def get(self):
+        inform_type = self.get_argument('informType', None)
+        is_done = int(self.get_argument('isDone',0))
+        page_size = int(self.get_argument('pageSize',0))
+        page_no = int(self.get_argument('pageNo',0))
+
+        inform_type = int(inform_type)
+        if inform_type is None:
+            raise ClientException('请指定举报列表数据类型!')
+        if not all([page_no,page_size]):
+            raise ClientException('页码或者条数不能为空!')
+
+        begin, end = (page_size * (page_no-1)), page_size
+
+        if inform_type == 0:
+            inform_data = await user_inform.get_goods_list(is_done=is_done,begin=begin,end=end)
+            self.reply(**inform_data)
+        if inform_type == 1:
+            inform_data = await user_inform.get_order_list(is_done=is_done,begin=begin,end=end)
+            self.reply(**inform_data)
+        if inform_type == 2:
+            inform_data = await user_inform.get_user_list(is_done=is_done,begin=begin,end=end)
+            self.reply(**inform_data)
+
+        # self.reply(**inform_data)
+
+@route('/api/v1/informUpdate')
+class InformUpdate(JSONController):
+    async def post(self):
+        id = self.get_data('informId', None)
+        processor_id = self.get_data('processorId',None)
+        process_method = self.get_data('processMethod', None)
+        print(id)
+        print(processor_id)
+        print(process_method)
+
+        if not (id or process_method or processor_id):
+            raise ClientException('请不要忘记输入参数!')
+
+        await user_inform.process_inform(id=id, processor_id=processor_id, process_method=process_method)
+
+        self.reply(status=0)
