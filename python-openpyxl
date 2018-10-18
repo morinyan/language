@@ -1,0 +1,23 @@
+from openpyxl import load_workbook
+
+wb = load_workbook('./test.xlsx')
+
+sheet = wx.get_sheet_by_name('Sheet1')
+
+rows = [s for s in sheet]
+
+execl_titles = [cell.value for cell in rows[0]]
+
+for i, row in enumerate(row[0:]):
+  temp_row = []
+  
+  print('>>>>>>>>>>>>>>>>>>>')
+  
+  for item in row:
+     temp_row.append(item.value)
+     
+   print(temp_row)
+   
+  print('>>>>>>>>>>>>>>>>>>')
+  
+  
