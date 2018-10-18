@@ -21,3 +21,38 @@ for i, row in enumerate(row[0:]):
   print('>>>>>>>>>>>>>>>>>>')
   
   
+  
+  
+  
+ 
+from openpyxl import load_workbook
+  2
+  3 wb = load_workbook('./rare.xlsx')
+  4
+  5 sheet = wb.get_sheet_by_name('Sheet1')
+  6
+  7
+  8 rows = [s for s in sheet]
+  9
+ 10 title = [cell.value for cell in rows[0]]
+ 11
+ 12 data = []
+ 13
+ 14 for row in rows[1:]:
+ 15     temp_row = []
+ 16
+ 17     index = -1
+ 18
+ 19     for item in row:
+ 20         index = index + 1
+ 21
+ 22         temp_row.append({title[index]:item.value})
+ 23
+ 24
+ 25     #print(temp_row)
+ 26     data.append(temp_row)
+ 27
+ 28
+ 29 print(data)
+  
+  
