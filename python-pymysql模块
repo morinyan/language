@@ -1,0 +1,18 @@
+#创建链接
+conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='root', db='wxapp_local')
+
+#创建游标
+cursor = conn.cursor()
+
+#执行SQL,并返回受影响的行数
+effect_row = cursor.execute('update morin set city = "北京" where id = 5')
+
+#提交
+conn.commit()
+
+#关闭游标
+cursor.close()
+
+#关闭链接
+conn.close()
+
