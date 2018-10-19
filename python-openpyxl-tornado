@@ -1,0 +1,54 @@
+import os
+import json
+from openpyxl import load_workbook
+
+
+@route("/api/v1/user/morin")
+class UserMorin(JSONController):
+    async def get(self):
+        self.write("""
+                    <html> <head><title>Upload File</title></head> <body> <form action='file' enctype="multipart/form-data" method='post'> <input type='file' name='file'/><br/> <input type='submit' value='submit'/> </form> </body> </html>
+                """)
+
+
+    async def post(self):
+        ret = {"result":"ok"}
+        upload_path = os.path.join('/tmp/morin','./')
+        file_metas = self.request.files.get('file',None)
+
+        print(">>>" * 20)
+        #print(file_metas)
+        print(">>>" * 20)
+
+        if not file_metas:
+            ret['result'] = 'Invalid Args'
+            return ret
+
+        for meta in file_metas:
+            filename = meta['filename']
+            file_path = os.path.join(upload_path,filename)
+
+            with open(file_path, 'wb') as up:
+                up.write(meta['body'])
+
+        
+        _path = os.path.join(upload_path,filename)
+        
+        wb = load_workbook(_path)
+
+        sheet = wb.get_sheet_by_name('Sheet1')
+
+        rows = [s for s in sheet]
+
+        for i, row in enumerate(rows[1:]):
+            temp_row = []
+
+            for item in row:
+                temp_row.append(item.value)
+
+            print('------' * 30)
+            print(temp_row)
+            print('------' * 30)
+
+
+        self.write(json.dumps(ret))
