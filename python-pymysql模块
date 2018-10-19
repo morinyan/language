@@ -1,11 +1,22 @@
+import pymysql
+
 #创建链接
 conn = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='root', db='wxapp_local')
 
 #创建游标
-cursor = conn.cursor()
+cursor = conn.cursor(cursor=pymysql.cursors.DictCursor) #字典
+cursor = conn.cursor() #元组
+
 
 #执行SQL,并返回受影响的行数
-effect_row = cursor.execute('update morin set city = "北京" where id = 5')
+#effect_row = cursor.execute('update morin set city = "北京" where id = 5')
+cursor.execute('select id as num,name,city from morin limit %s',(10,))
+
+rows = cursor.fetchall()
+
+print("=>" * 30)
+print(rows)
+print("=>" * 30)
 
 #提交
 conn.commit()
@@ -15,4 +26,5 @@ cursor.close()
 
 #关闭链接
 conn.close()
+
 
