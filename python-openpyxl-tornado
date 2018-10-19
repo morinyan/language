@@ -1,6 +1,8 @@
 import os
 import json
 from openpyxl import load_workbook
+from io import BytesIO
+
 
 
 @route("/api/v1/user/morin")
@@ -15,7 +17,13 @@ class UserMorin(JSONController):
         ret = {"result":"ok"}
         upload_path = os.path.join('/tmp/morin','./')
         file_metas = self.request.files.get('file',None)
-
+        
+        #file_metas数据结构为[{"filename":"","body":二进制流}]
+        #通过二进制流读取excel文件内容需要取到body中的数据
+        #wa的方式得到的结果和wb方式得到的结果是一样的
+        #wb = load_workbook(_path)
+        wa = load_workbook(filename=BytesIO(file_metas[0]['body']))
+        
         print(">>>" * 20)
         #print(file_metas)
         print(">>>" * 20)
