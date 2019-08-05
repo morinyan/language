@@ -1,0 +1,67 @@
+form flask import Flask,request
+
+app = Flask(__name__)
+app.debug = True
+
+@app.route('/morin',methods=['GET','POST'])
+def morin():
+  return "this is morin ..."
+  
+  
+if __name__ == '__main__':
+  app.run(host='0.0.0.0',port='9000')
+  
+  
+#获取请求参数:
+#获取GET请求参数:
+name = request.args.get('name','默认数据')
+
+#获取POST请求参数:
+name = request.json.get('name','默认数据')   #这是JSON数据格式
+name = request.form.get('name','默认数据')   #这是FORM-DATA数据格式
+
+#获取上传文件参数
+f = request.files.get('filename')
+f_name = f.filename
+f.save('/home/file/python/imgs/test.jpg') #保存函数
+
+#获取请求头Cookies信息
+test = request.cookies.get('test')
+morin = request.cookies.get('morin')
+
+#请求重定向&错误处理
+from flask import abort, redirect, url_for
+#请求重定向
+@app.route('/')
+def index():
+    return redirect(url_for('login'))
+#错误处理
+@app.route('/login')
+def login():
+    abort(401) 
+    
+#关于Flask用户会话
+https://www.letiantian.me/jiaocheng/python-flask/%E5%85%A5%E9%97%A8/%E7%94%A8%E6%88%B7%E4%BC%9A%E8%AF%9D.html
+
+#Flask响应make_response
+
+from flask import Flask, json, make_response
+app = Flask(__name__)
+
+@app.route('/morin', methods=['GET','PSOT'])
+def morin():
+        data = json.dumps({
+                'name':'这里是name',
+                'age':1111,
+                'city':'北京'
+        })
+        res = make_response(data)
+        res.headers['morin'] = 'aaaa'
+        res.set_cookie('rare','morinaaaaa1111')
+        return res
+
+if __name__ == '__main__':
+        app.run(host='0.0.0.0',port='9000',debug=True)
+
+
+  
