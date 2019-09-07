@@ -1,6 +1,18 @@
 ### #php
 
 ```
+# 卸载旧版本
+
+$ yum remove php*
+
+# 安装PHP7及其插件
+$ rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+
+$ yum install php70w-common php70w php70w-opcache php70w-gd php70w-mysqlnd php70w-mbstring php70w-devel
+
+```
+
+```
 php内置开发服务器:
   # 简单启动
   php -S localhost:8080
