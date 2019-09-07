@@ -51,4 +51,8 @@ $ composer update
 # 配置国内镜像
 $ composer config -g repo.packagist composer https://packagist.laravel-china.org
 
+# 解除镜像
+$ composer config -g --unset repos.packagist
+
+
 ```
