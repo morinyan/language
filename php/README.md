@@ -48,6 +48,7 @@ $ composer install
 # 更新项目依赖
 $ composer update
 
-
+# 配置国内镜像
+$ composer config -g repo.packagist composer https://packagist.laravel-china.org
 
 ```
